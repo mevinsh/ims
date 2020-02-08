@@ -56,14 +56,8 @@ public class StockOrderService {
             final Boolean test) {
 
         final Iterable<ProductOrderRule> productOrderRules = productOrderRuleDao.findAll();
-        if(productOrderRules == null) {
-            log.info("No Rules available for order");
-            return emptyOrdersList();
-        }
 
         final Iterable<Product> products = productDao.findAll();
-        if(products == null)
-            return emptyOrdersList();
 
         final Map<Integer, ProductOrderRule> rulesMap =
                 StreamSupport.stream(productOrderRules.spliterator(),false)
@@ -93,15 +87,15 @@ public class StockOrderService {
                 if(result.isPresent()){
                     final Orders ord = (Orders)result.get().getValue();
                     if(ord != null)
-                        orders.add(ord);
+                        orders.add(ord.toBuilder().productName(p.getProductName()).build());
                 }
             }
         });
 
-        if(orders != null && !test){
+        if(!test){
             return OrdersList.builder()
                     .ordersList(orders.stream()
-                            .map(o->orderDao.save(o))
+                            .map(orderDao::save)
                             .collect(Collectors.toList()))
                     .build();
         }
